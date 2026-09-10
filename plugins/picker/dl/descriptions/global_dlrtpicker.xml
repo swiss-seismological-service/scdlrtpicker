@@ -1,0 +1,360 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<seiscomp>
+	<plugin name="DLRTPicker">
+		<extends>global</extends>
+		<description>
+		Deep-learning P- and S-phase pickers
+		</description>
+	</plugin>
+	<binding name="DLRTPicker" module="global">
+		<configuration>
+			<group name="picker">
+				<group name="DL1C">
+					<description>
+					Single, vertical-component deep-learning P picker. The picker
+					interface name to configure in scautopick's "picker" parameter
+					is "DL1C". The configured model must export
+					seiscomp.picker.numComponents = 1.
+					</description>
+					<parameter name="model" type="file" options="read" default="">
+						<description>
+						Path to the ONNX model file. Required, no default: setup()
+						fails if this is empty or the file does not satisfy the
+						seiscomp.picker.* metadata contract.
+						</description>
+					</parameter>
+					<parameter name="minConfidence" type="double" default="0.4">
+						<description>
+						Minimum model confidence (in [0,1]) for a P pick to be
+						accepted, compared against the model's peak P output
+						value. Among the P-curve peaks that clear this threshold
+						the picker takes the most confident one whose S
+						probability at that same sample stays below 80% of its P
+						value; a peak the model fires on almost as strongly for
+						S is skipped in favour of the next candidate. Only
+						relevant if the model also exports an "S" output.
+						</description>
+					</parameter>
+					<parameter name="minLatency" type="double" default="3" unit="s">
+						<description>
+						Seconds after the trigger at which the earliest
+						evaluation window ends and its inference runs. It is the
+						soonest a pick can be emitted. Disregarded when
+						maxAttempts is 1.
+						</description>
+					</parameter>
+					<parameter name="maxLatency" type="double" unit="s">
+						<description>
+						Seconds after the trigger at which the latest evaluation
+						window ends. Default: half the model window, a window
+						centred on the trigger (best pick quality); lower it to
+						trade quality for a faster pick. Also where the single
+						window sits when maxAttempts resolves to 1.
+						</description>
+					</parameter>
+					<parameter name="maxAttempts" type="int">
+						<description>
+						Number of evaluation windows, spread evenly from
+						minLatency to maxLatency. If unset the count is computed
+						as ceil((maxLatency - minLatency) / (windowDuration/2)) + 1,
+						where windowDuration is the model's window length in
+						seconds,
+						clamped to [1,20]. Set it explicitly only to cap
+						inference cost, or higher to tighten strategy = best pick
+						times. 1 = a single window at maxLatency.
+						</description>
+					</parameter>
+					<parameter name="strategy" type="string" default="fast" values="fast,best">
+						<description>
+						"fast" accepts the first window whose confidence clears
+						minConfidence (lower latency). "best" evaluates every
+						window and keeps the single most confident pick (higher
+						accuracy).
+						</description>
+					</parameter>
+					<parameter name="polarityMinConfidence" type="double" default="0.5">
+						<description>
+						Minimum confidence (in [0,1]) to set the pick's
+						first-motion polarity, compared against the model's
+						first-motion output at the picked sample. Only
+						relevant if the model also exports
+						seiscomp.picker.polarityLabels; ignored otherwise.
+						Below this, polarity is left unset rather than
+						reported as undecidable.
+						</description>
+					</parameter>
+					<parameter name="uncertaintyAtMinConfidence" type="double" unit="s">
+						<description>
+						Time uncertainty to report when the pick's confidence
+						is at minConfidence, the worst accepted case. Together
+						with uncertaintyAtMaxConfidence, linearly maps
+						confidence to a derived time uncertainty for a model
+						that does not export seiscomp.picker.uncertaintyLabels;
+						ignored if it does (a real per-sample value always
+						wins), and has no effect unless
+						uncertaintyAtMaxConfidence is also set. Unset by
+						default: no uncertainty is derived.
+						</description>
+					</parameter>
+					<parameter name="uncertaintyAtMaxConfidence" type="double" unit="s">
+						<description>
+						Time uncertainty to report when the pick's confidence
+						is 1, the best possible case. See
+						uncertaintyAtMinConfidence; both must be set together.
+						</description>
+					</parameter>
+				</group>
+				<group name="DL3C">
+					<description>
+					Joint Z+N+E deep-learning P picker. The picker interface name
+					to configure in scautopick's "picker" parameter is "DL3C". The
+					configured model must export seiscomp.picker.numComponents = 3.
+					</description>
+					<parameter name="model" type="file" options="read" default="">
+						<description>
+						Path to the ONNX model file. Required, no default: setup()
+						fails if this is empty or the file does not satisfy the
+						seiscomp.picker.* metadata contract.
+						</description>
+					</parameter>
+					<parameter name="minConfidence" type="double" default="0.4">
+						<description>
+						Minimum model confidence (in [0,1]) for a P pick to be
+						accepted, compared against the model's peak P output
+						value. Among the P-curve peaks that clear this threshold
+						the picker takes the most confident one whose S
+						probability at that same sample stays below 80% of its P
+						value; a peak the model fires on almost as strongly for
+						S is skipped in favour of the next candidate. Only
+						relevant if the model also exports an "S" output.
+						</description>
+					</parameter>
+					<parameter name="minLatency" type="double" default="3" unit="s">
+						<description>
+						Seconds after the trigger at which the earliest
+						evaluation window ends and its inference runs. It is the
+						soonest a pick can be emitted. Disregarded when
+						maxAttempts is 1.
+						</description>
+					</parameter>
+					<parameter name="maxLatency" type="double" unit="s">
+						<description>
+						Seconds after the trigger at which the latest evaluation
+						window ends. Default: half the model window, a window
+						centred on the trigger (best pick quality); lower it to
+						trade quality for a faster pick. Also where the single
+						window sits when maxAttempts resolves to 1.
+						</description>
+					</parameter>
+					<parameter name="maxAttempts" type="int">
+						<description>
+						Number of evaluation windows, spread evenly from
+						minLatency to maxLatency. If unset the count is computed
+						as ceil((maxLatency - minLatency) / (windowDuration/2)) + 1,
+						where windowDuration is the model's window length in
+						seconds,
+						clamped to [1,20]. Set it explicitly only to cap
+						inference cost, or higher to tighten strategy = best pick
+						times. 1 = a single window at maxLatency.
+						</description>
+					</parameter>
+					<parameter name="strategy" type="string" default="fast" values="fast,best">
+						<description>
+						"fast" accepts the first window whose confidence clears
+						minConfidence (lower latency). "best" evaluates every
+						window and keeps the single most confident pick (higher
+						accuracy).
+						</description>
+					</parameter>
+					<parameter name="polarityMinConfidence" type="double" default="0.5">
+						<description>
+						Minimum confidence (in [0,1]) to set the pick's
+						first-motion polarity, compared against the model's
+						first-motion output at the picked sample. Only
+						relevant if the model also exports
+						seiscomp.picker.polarityLabels; ignored otherwise.
+						Below this, polarity is left unset rather than
+						reported as undecidable.
+						</description>
+					</parameter>
+					<parameter name="uncertaintyAtMinConfidence" type="double" unit="s">
+						<description>
+						Time uncertainty to report when the pick's confidence
+						is at minConfidence, the worst accepted case. Together
+						with uncertaintyAtMaxConfidence, linearly maps
+						confidence to a derived time uncertainty for a model
+						that does not export seiscomp.picker.uncertaintyLabels;
+						ignored if it does (a real per-sample value always
+						wins), and has no effect unless
+						uncertaintyAtMaxConfidence is also set. Unset by
+						default: no uncertainty is derived.
+						</description>
+					</parameter>
+					<parameter name="uncertaintyAtMaxConfidence" type="double" unit="s">
+						<description>
+						Time uncertainty to report when the pick's confidence
+						is 1, the best possible case. See
+						uncertaintyAtMinConfidence; both must be set together.
+						</description>
+					</parameter>
+				</group>
+			</group>
+			<group name="spicker">
+				<group name="SDL1C">
+					<description>
+					Single, vertical-component deep-learning S picker. The
+					secondary picker interface name to configure in scautopick's
+					"spicker" parameter is "SDL1C". The configured model must
+					export seiscomp.picker.numComponents = 1.
+					</description>
+					<parameter name="model" type="file" options="read" default="">
+						<description>
+						Path to the ONNX model file. Required, no default: setup()
+						fails if this is empty or the file does not satisfy the
+						seiscomp.picker.* metadata contract.
+						</description>
+					</parameter>
+					<parameter name="minConfidence" type="double" default="0.3">
+						<description>
+						Minimum model confidence (in [0,1]) for an S pick to be
+						accepted, compared directly against the model's peak output
+						value.
+						</description>
+					</parameter>
+					<parameter name="minSP" type="double" default="0" unit="s">
+						<description>
+						Smallest S-P time (seconds after the reference P pick) to
+						search for; its window is centred on an S at this S-P
+						time.
+						</description>
+					</parameter>
+					<parameter name="maxSP" type="double" default="60" unit="s">
+						<description>
+						Largest S-P time (seconds after the reference P pick) to
+						search for, and the hard limit on what the picker can
+						reach: an S arriving later than maxSP after its P is not
+						found. Set it to your network's largest expected S-P
+						time; the default 60 s suits a regional network.
+						</description>
+					</parameter>
+					<parameter name="maxAttempts" type="int">
+						<description>
+						Number of evaluation windows, spread evenly over
+						[minSP, maxSP]. If unset the count is computed as
+						ceil((maxSP - minSP) / (windowDuration/2)) + 1, where
+						windowDuration is the model's window length in seconds,
+						clamped to [1,20]. Set it explicitly only to cap
+						inference cost, or higher to tighten strategy = best
+						pick times.
+						</description>
+					</parameter>
+					<parameter name="strategy" type="string" default="fast" values="fast,best">
+						<description>
+						"fast" accepts the first window whose confidence clears
+						minConfidence (lower latency). "best" evaluates every
+						window and keeps the single most confident pick (higher
+						accuracy).
+						</description>
+					</parameter>
+					<parameter name="uncertaintyAtMinConfidence" type="double" unit="s">
+						<description>
+						Time uncertainty to report when the pick's confidence
+						is at minConfidence, the worst accepted case. Together
+						with uncertaintyAtMaxConfidence, linearly maps
+						confidence to a derived time uncertainty for a model
+						that does not export seiscomp.picker.uncertaintyLabels;
+						ignored if it does (a real per-sample value always
+						wins), and has no effect unless
+						uncertaintyAtMaxConfidence is also set. Unset by
+						default: no uncertainty is derived.
+						</description>
+					</parameter>
+					<parameter name="uncertaintyAtMaxConfidence" type="double" unit="s">
+						<description>
+						Time uncertainty to report when the pick's confidence
+						is 1, the best possible case. See
+						uncertaintyAtMinConfidence; both must be set together.
+						</description>
+					</parameter>
+				</group>
+				<group name="SDL3C">
+					<description>
+					Joint Z+N+E deep-learning S picker. The secondary picker
+					interface name to configure in scautopick's "spicker"
+					parameter is "SDL3C". The configured model must export
+					seiscomp.picker.numComponents = 3.
+					</description>
+					<parameter name="model" type="file" options="read" default="">
+						<description>
+						Path to the ONNX model file. Required, no default: setup()
+						fails if this is empty or the file does not satisfy the
+						seiscomp.picker.* metadata contract.
+						</description>
+					</parameter>
+					<parameter name="minConfidence" type="double" default="0.3">
+						<description>
+						Minimum model confidence (in [0,1]) for an S pick to be
+						accepted, compared directly against the model's peak output
+						value.
+						</description>
+					</parameter>
+					<parameter name="minSP" type="double" default="0" unit="s">
+						<description>
+						Smallest S-P time (seconds after the reference P pick) to
+						search for; its window is centred on an S at this S-P
+						time.
+						</description>
+					</parameter>
+					<parameter name="maxSP" type="double" default="60" unit="s">
+						<description>
+						Largest S-P time (seconds after the reference P pick) to
+						search for, and the hard limit on what the picker can
+						reach: an S arriving later than maxSP after its P is not
+						found. Set it to your network's largest expected S-P
+						time; the default 60 s suits a regional network.
+						</description>
+					</parameter>
+					<parameter name="maxAttempts" type="int">
+						<description>
+						Number of evaluation windows, spread evenly over
+						[minSP, maxSP]. If unset the count is computed as
+						ceil((maxSP - minSP) / (windowDuration/2)) + 1, where
+						windowDuration is the model's window length in seconds,
+						clamped to [1,20]. Set it explicitly only to cap
+						inference cost, or higher to tighten strategy = best
+						pick times.
+						</description>
+					</parameter>
+					<parameter name="strategy" type="string" default="fast" values="fast,best">
+						<description>
+						"fast" accepts the first window whose confidence clears
+						minConfidence (lower latency). "best" evaluates every
+						window and keeps the single most confident pick (higher
+						accuracy).
+						</description>
+					</parameter>
+					<parameter name="uncertaintyAtMinConfidence" type="double" unit="s">
+						<description>
+						Time uncertainty to report when the pick's confidence
+						is at minConfidence, the worst accepted case. Together
+						with uncertaintyAtMaxConfidence, linearly maps
+						confidence to a derived time uncertainty for a model
+						that does not export seiscomp.picker.uncertaintyLabels;
+						ignored if it does (a real per-sample value always
+						wins), and has no effect unless
+						uncertaintyAtMaxConfidence is also set. Unset by
+						default: no uncertainty is derived.
+						</description>
+					</parameter>
+					<parameter name="uncertaintyAtMaxConfidence" type="double" unit="s">
+						<description>
+						Time uncertainty to report when the pick's confidence
+						is 1, the best possible case. See
+						uncertaintyAtMinConfidence; both must be set together.
+						</description>
+					</parameter>
+				</group>
+			</group>
+		</configuration>
+	</binding>
+</seiscomp>

@@ -288,7 +288,7 @@ the model window past its onset:
 ```
 picker.DL3C.maxAttempts = 1     # one window
 # picker.DL3C.maxLatency        # unset: defaults to half the model window (centred)
-# picker.DL3C.minLatency        # disregarded when maxAttempts is 1
+# picker.DL3C.minLatency        # unset: defaults to same as maxLatency; disregarded when maxAttempts is 1
 # picker.DL3C.strategy          # not relevant with a single window
 ```
 

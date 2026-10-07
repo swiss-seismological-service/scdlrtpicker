@@ -255,6 +255,28 @@ bool DLSecondaryPicker<NComponents>::setup(const Settings &settings) {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 template <int NComponents>
+void DLSecondaryPicker<NComponents>::computeTimeWindow() {
+	SecondaryPicker::computeTimeWindow();
+	// TimeWindowProcessor::store() terminates the picker the moment a
+	// record starts past _safetyTimeWindow.endTime(), so if that end time
+	// is smaller than _attemptDelays.back() the later attempts never run.
+	if ( !_trigger.onset.valid() || _attemptDelays.empty() ) return;
+	Core::Time requiredEnd = _trigger.onset + Core::TimeSpan(_attemptDelays.back());
+	if ( timeWindow().endTime() < requiredEnd ) {
+		SEISCOMP_WARNING("[%s] signalEnd override (%.4fs after trigger) is shorter "
+		                 "than the last attempt checkpoint (%.4fs); ignoring override",
+		                 methodID().c_str(),
+		                 double(timeWindow().endTime() - _trigger.onset),
+		                 _attemptDelays.back());
+		Core::Time startTime = timeWindow().startTime();
+		setTimeWindow(Core::TimeWindow(startTime, requiredEnd));
+	}
+}
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+template <int NComponents>
 bool DLSecondaryPicker<NComponents>::feed(const Record *rec) {
 	if ( !_onnxStream ) {
 		// Shouldn't happen before a successful setup(); fail safe

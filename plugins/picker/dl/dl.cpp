@@ -262,6 +262,28 @@ bool DLPicker<NComponents>::setup(const Settings &settings) {
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 template <int NComponents>
+void DLPicker<NComponents>::computeTimeWindow() {
+	Picker::computeTimeWindow();
+	// TimeWindowProcessor::store() terminates the picker the moment a
+	// record starts past _safetyTimeWindow.endTime(), so if that end time
+	// is smaller than _attemptDelays.back() the later attempts never run.
+	if ( !bool(_trigger) || _attemptDelays.empty() ) return;
+	Core::Time requiredEnd = _trigger + Core::TimeSpan(_attemptDelays.back());
+	if ( timeWindow().endTime() < requiredEnd ) {
+		SEISCOMP_WARNING("[%s] signalEnd override (%.4fs after trigger) is shorter "
+		                 "than the last attempt checkpoint (%.4fs); ignoring override",
+		                 methodID().c_str(),
+		                 double(timeWindow().endTime() - _trigger),
+		                 _attemptDelays.back());
+		Core::Time startTime = timeWindow().startTime();
+		setTimeWindow(Core::TimeWindow(startTime, requiredEnd));
+	}
+}
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+template <int NComponents>
 bool DLPicker<NComponents>::feed(const Record *rec) {
 	if ( !_onnxStream ) {
 		// Shouldn't happen before a successful setup(); fail safe

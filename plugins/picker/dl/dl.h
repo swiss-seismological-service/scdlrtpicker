@@ -86,6 +86,8 @@ class DLPicker : public Picker {
 	public:
 		bool setup(const Settings &settings) override;
 
+		void computeTimeWindow() override;
+
 		const std::string &methodID() const override;
 		const std::string &filterID() const override;
 

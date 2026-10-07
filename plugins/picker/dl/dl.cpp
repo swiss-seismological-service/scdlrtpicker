@@ -354,9 +354,13 @@ void DLPicker<NComponents>::process(const Record *record, const DoubleArray &) {
 			( sit != probs.end() && sit->second.size() == pCurve.size() )
 			? &sit->second : nullptr;
 
+		float attemptMaxP = 0.0f;
 		for ( float v : pCurve ) {
 			if ( v > _bestRawConfidence ) {
 				_bestRawConfidence = v;
+			}
+			if ( v > attemptMaxP ) {
+				attemptMaxP = v;
 			}
 		}
 
@@ -400,10 +404,13 @@ void DLPicker<NComponents>::process(const Record *record, const DoubleArray &) {
 		}
 
 		if ( pickIdx < 0 ) {
-			SEISCOMP_DEBUG("[%s/%s] attempt %zu/%zu: no S-free P peak reaching "
-			               "minConfidence (%.2f)",
+			SEISCOMP_DEBUG("[%s/%s] attempt %zu/%zu: no P peak reaching "
+			               "minConfidence -- bestP=%.2f threshold=%.2f "
+			               "(ref=%s offset=%.3fs window=%.3fs)",
 			               methodID().c_str(), station.c_str(), _nextAttempt,
-			               _attemptDelays.size(), _minConfidence);
+			               _attemptDelays.size(), attemptMaxP, _minConfidence,
+			               _trigger.iso().c_str(), double(windowStart - _trigger),
+			               _onnxStream->windowDuration());
 			continue;
 		}
 

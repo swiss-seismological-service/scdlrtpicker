@@ -46,7 +46,7 @@ const double kIgnoredWindowSentinel = -1.0;
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 template <int NComponents>
 DLSecondaryPicker<NComponents>::DLSecondaryPicker()
-: _minConfidence(0.3), _strategy(Strategy::Fast), _nextAttempt(0), _bestConfidence(-1.0),
+: _minConfidence(0.3), _strategy(Strategy::Fast), _phaseHint("S"), _nextAttempt(0), _bestConfidence(-1.0),
   _bestLowerUncertainty(-1.0), _bestUpperUncertainty(-1.0) {
 	// See DLPicker's constructor: without this, DLSecondaryPicker<3>'s
 	// N/E data never gets routed to it.
@@ -105,6 +105,15 @@ bool DLSecondaryPicker<NComponents>::setup(const Settings &settings) {
 
 	try { _minConfidence = settings.getDouble("spicker." + methodID() + ".minConfidence"); }
 	catch ( ... ) {}
+
+	// The S counterpart of scautopick's phaseHint, which only names the
+	// primary (P) picker's picks.
+	_phaseHint = "S";
+	try { _phaseHint = settings.getString("spicker." + methodID() + ".phaseHint"); }
+	catch ( ... ) {}
+	if ( _phaseHint.empty() ) {
+		_phaseHint = "S";
+	}
 
 	// Confidence-derived uncertainty fallback; only used if the model
 	// has no uncertaintyLabels of its own -- see S_dl.h and
@@ -422,7 +431,7 @@ void DLSecondaryPicker<NComponents>::acceptPick(const Record *record, const Core
 	Result result;
 	result.time = pickTime;
 	result.snr = confidence;
-	result.phaseCode = "S";
+	result.phaseCode = _phaseHint;
 	result.filterID = filterID();
 	result.record = record;
 	// timeLowerUncertainty/timeUpperUncertainty have no default member

@@ -106,6 +106,10 @@ class DLSecondaryPicker : public SecondaryPicker {
 		double              _minConfidence;
 		Strategy            _strategy;
 
+		// Phase code of the emitted pick; "S" unless phaseHint is
+		// configured (e.g. "Sg").
+		std::string         _phaseHint;
+
 		// Confidence-derived uncertainty fallback for a model without
 		// uncertaintyLabels; both unset unless both are configured.
 		// See the class comment and ConfidenceToUncertainty().

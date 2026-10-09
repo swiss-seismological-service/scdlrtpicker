@@ -225,6 +225,11 @@
 						value.
 						</description>
 					</parameter>
+					<parameter name="phaseHint" type="string" default="S">
+						<description>
+						Phase hint assigned to the S pick, e.g. "Sg".
+						</description>
+					</parameter>
 					<parameter name="minLatency" type="double" unit="s">
 						<description>
 						Seconds after the reference P pick at which the earliest
@@ -307,6 +312,11 @@
 						Minimum model confidence (in [0,1]) for an S pick to be
 						accepted, compared directly against the model's peak output
 						value.
+						</description>
+					</parameter>
+					<parameter name="phaseHint" type="string" default="S">
+						<description>
+						Phase hint assigned to the S pick, e.g. "Sg".
 						</description>
 					</parameter>
 					<parameter name="minLatency" type="double" unit="s">

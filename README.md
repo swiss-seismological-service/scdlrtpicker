@@ -462,6 +462,9 @@ duration.
 ## What ends up on the pick
 
 Pick time, phase hint and method ID (`DL1C` … `SDL3C`) as for any picker. The
+phase hint of a P pick comes from scautopick's own `phaseHint`;
+for an S pick, from this plugin's `spicker.SDL3C.phaseHint` /
+`spicker.SDL1C.phaseHint` binding parameter. The
 model confidence is carried in the pick's `snr` field **and** added as a
 `confidence` comment as a 0–1 value, not a classical signal-to-noise ratio.
 

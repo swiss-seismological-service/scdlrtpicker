@@ -221,7 +221,14 @@ bool OnnxSession::load(const std::string &path) {
 
 	_config.resample = true;
 	if ( getString("seiscomp.picker.resample", false, tmp) ) {
-		_config.resample = !(tmp == "false" || tmp == "0");
+		if ( tmp == "true" || tmp == "1" ) _config.resample = true;
+		else if ( tmp == "false" || tmp == "0" ) _config.resample = false;
+		else {
+			SEISCOMP_ERROR("OnnxSession: '%s' seiscomp.picker.resample "
+			               "= '%s' is not one of 'true', 'false', '1', '0'",
+			               path.c_str(), tmp.c_str());
+			return false;
+		}
 	}
 
 	if ( _config.numComponents != 1 && _config.numComponents != 3 ) {

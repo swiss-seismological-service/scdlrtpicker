@@ -35,12 +35,13 @@
 						relevant if the model also exports an "S" output.
 						</description>
 					</parameter>
-					<parameter name="minLatency" type="double" default="3" unit="s">
+					<parameter name="minLatency" type="double" unit="s">
 						<description>
 						Seconds after the trigger at which the earliest
 						evaluation window ends and its inference runs. It is the
-						soonest a pick can be emitted. Disregarded when
-						maxAttempts is 1.
+						soonest a pick can be emitted. Default: same as
+						maxLatency. Disregarded when maxAttempts is 1, use
+						maxLatency in that case.
 						</description>
 					</parameter>
 					<parameter name="maxLatency" type="double" unit="s">
@@ -129,12 +130,13 @@
 						relevant if the model also exports an "S" output.
 						</description>
 					</parameter>
-					<parameter name="minLatency" type="double" default="3" unit="s">
+					<parameter name="minLatency" type="double" unit="s">
 						<description>
 						Seconds after the trigger at which the earliest
 						evaluation window ends and its inference runs. It is the
-						soonest a pick can be emitted. Disregarded when
-						maxAttempts is 1.
+						soonest a pick can be emitted. Default: same as
+						maxLatency. Disregarded when maxAttempts is 1, use
+						maxLatency in that case.
 						</description>
 					</parameter>
 					<parameter name="maxLatency" type="double" unit="s">

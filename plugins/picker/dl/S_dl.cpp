@@ -335,10 +335,22 @@ void DLSecondaryPicker<NComponents>::process(const Record *rec, const DoubleArra
 			return;
 		}
 
+		// Only samples strictly after the reference P can be an S. An
+		// early window (e.g. ending a second after P) is mostly pre-P
+		// data, where a plain argmax could land on noise or on the P.
 		const std::vector<float> &curve = it->second;
-		int best = 0;
-		float bestVal = curve[0];
-		for ( size_t i = 1; i < curve.size(); ++i ) {
+		int first = std::max(0, (int)std::floor(double(_trigger.onset - windowStart)
+		                                        * _stream.fsamp) + 1);
+		if ( first >= (int)curve.size() ) {
+			SEISCOMP_DEBUG("[%s/%s] attempt %zu/%zu: window ends before the P pick, "
+			               "nothing to search", methodID().c_str(), station.c_str(),
+			               _nextAttempt, _attemptDelays.size());
+			continue;
+		}
+
+		int best = first;
+		float bestVal = curve[first];
+		for ( size_t i = first + 1; i < curve.size(); ++i ) {
 			if ( curve[i] > bestVal ) {
 				bestVal = curve[i];
 				best = (int)i;

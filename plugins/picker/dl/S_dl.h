@@ -42,6 +42,7 @@ namespace Processing {
  *        windows can reach depends on where in its window the model
  *        places an onset (see README); an S beyond the latest window
  *        is not found, since the model never sees data beyond it.
+ *        Only samples after the P pick are searched for the S peak.
  *
  * feed() resamples each component to the model's sampleRate first
  * (skipped if seiscomp.picker.resample = false).

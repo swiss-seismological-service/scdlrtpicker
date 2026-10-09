@@ -23,5 +23,5 @@ ADD_SC_PLUGIN(
 	"ONNX Runtime based deep-learning P/S pickers (DL1C/DL3C/SDL1C/SDL3C), "
 	"triggered by scautopick's Detector like AIC/BK/GFZ",
 	"scdlrtpicker",
-	1, 0, 0
+	1, 1, 0
 )

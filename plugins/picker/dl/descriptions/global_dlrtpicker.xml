@@ -40,7 +40,7 @@
 						Seconds after the trigger at which the earliest
 						evaluation window ends and its inference runs. It is the
 						soonest a pick can be emitted. Default: same as
-						maxLatency. Disregarded when maxAttempts is 1, use
+						maxLatency. Disregarded when maxAttempts is 1; use
 						maxLatency in that case.
 						</description>
 					</parameter>
@@ -59,10 +59,11 @@
 						minLatency to maxLatency. If unset the count is computed
 						as ceil((maxLatency - minLatency) / (windowDuration/2)) + 1,
 						where windowDuration is the model's window length in
-						seconds,
-						clamped to [1,20]. Set it explicitly only to cap
-						inference cost, or higher to tighten strategy = best pick
-						times. 1 = a single window at maxLatency.
+						seconds, clamped to [1,20], so it is 1 when minLatency
+						equals maxLatency. Set it explicitly to cap inference
+						cost, or higher to tighten pick times (with strategy =
+						best) or the pick latency (with strategy = fast). 1 = a
+						single window at maxLatency.
 						</description>
 					</parameter>
 					<parameter name="strategy" type="string" default="fast" values="fast,best">
@@ -135,7 +136,7 @@
 						Seconds after the trigger at which the earliest
 						evaluation window ends and its inference runs. It is the
 						soonest a pick can be emitted. Default: same as
-						maxLatency. Disregarded when maxAttempts is 1, use
+						maxLatency. Disregarded when maxAttempts is 1; use
 						maxLatency in that case.
 						</description>
 					</parameter>
@@ -154,10 +155,11 @@
 						minLatency to maxLatency. If unset the count is computed
 						as ceil((maxLatency - minLatency) / (windowDuration/2)) + 1,
 						where windowDuration is the model's window length in
-						seconds,
-						clamped to [1,20]. Set it explicitly only to cap
-						inference cost, or higher to tighten strategy = best pick
-						times. 1 = a single window at maxLatency.
+						seconds, clamped to [1,20], so it is 1 when minLatency
+						equals maxLatency. Set it explicitly to cap inference
+						cost, or higher to tighten pick times (with strategy =
+						best) or the pick latency (with strategy = fast). 1 = a
+						single window at maxLatency.
 						</description>
 					</parameter>
 					<parameter name="strategy" type="string" default="fast" values="fast,best">
@@ -223,31 +225,38 @@
 						value.
 						</description>
 					</parameter>
-					<parameter name="minSP" type="double" default="0" unit="s">
+					<parameter name="minLatency" type="double" unit="s">
 						<description>
-						Smallest S-P time (seconds after the reference P pick) to
-						search for; its window is centred on an S at this S-P
-						time.
+						Seconds after the reference P pick at which the earliest
+						evaluation window ends and its inference runs. It is the
+						soonest a pick can be emitted. Only the part of a window
+						after the P pick is searched for the S. Default: half the
+						model window, the window centred on an S at S-P = 0 s, or
+						maxLatency if that is lower. Disregarded when maxAttempts
+						is 1; use maxLatency in that case.
 						</description>
 					</parameter>
-					<parameter name="maxSP" type="double" default="60" unit="s">
+					<parameter name="maxLatency" type="double" unit="s">
 						<description>
-						Largest S-P time (seconds after the reference P pick) to
-						search for, and the hard limit on what the picker can
-						reach: an S arriving later than maxSP after its P is not
-						found. Set it to your network's largest expected S-P
-						time; the default 60 s suits a regional network.
+						Seconds after the reference P pick at which the latest
+						evaluation window ends, and so the limit on what the
+						picker can reach. Default: 60 s plus half the model
+						window, the window centred on an S at S-P = 60 s. Also
+						where the single window sits when maxAttempts resolves
+						to 1.
 						</description>
 					</parameter>
 					<parameter name="maxAttempts" type="int">
 						<description>
-						Number of evaluation windows, spread evenly over
-						[minSP, maxSP]. If unset the count is computed as
-						ceil((maxSP - minSP) / (windowDuration/2)) + 1, where
-						windowDuration is the model's window length in seconds,
-						clamped to [1,20]. Set it explicitly only to cap
-						inference cost, or higher to tighten strategy = best
-						pick times.
+						Number of evaluation windows, spread evenly from
+						minLatency to maxLatency. If unset the count is computed
+						as ceil((maxLatency - minLatency) / (windowDuration/2)) + 1,
+						where windowDuration is the model's window length in
+						seconds, clamped to [1,20], so it is 1 when minLatency
+						equals maxLatency. Set it explicitly to cap inference
+						cost, or higher to tighten pick times (with strategy =
+						best) or the pick latency (with strategy = fast). 1 = a
+						single window at maxLatency.
 						</description>
 					</parameter>
 					<parameter name="strategy" type="string" default="fast" values="fast,best">
@@ -300,31 +309,38 @@
 						value.
 						</description>
 					</parameter>
-					<parameter name="minSP" type="double" default="0" unit="s">
+					<parameter name="minLatency" type="double" unit="s">
 						<description>
-						Smallest S-P time (seconds after the reference P pick) to
-						search for; its window is centred on an S at this S-P
-						time.
+						Seconds after the reference P pick at which the earliest
+						evaluation window ends and its inference runs. It is the
+						soonest a pick can be emitted. Only the part of a window
+						after the P pick is searched for the S. Default: half the
+						model window, the window centred on an S at S-P = 0 s, or
+						maxLatency if that is lower. Disregarded when maxAttempts
+						is 1; use maxLatency in that case.
 						</description>
 					</parameter>
-					<parameter name="maxSP" type="double" default="60" unit="s">
+					<parameter name="maxLatency" type="double" unit="s">
 						<description>
-						Largest S-P time (seconds after the reference P pick) to
-						search for, and the hard limit on what the picker can
-						reach: an S arriving later than maxSP after its P is not
-						found. Set it to your network's largest expected S-P
-						time; the default 60 s suits a regional network.
+						Seconds after the reference P pick at which the latest
+						evaluation window ends, and so the limit on what the
+						picker can reach. Default: 60 s plus half the model
+						window, the window centred on an S at S-P = 60 s. Also
+						where the single window sits when maxAttempts resolves
+						to 1.
 						</description>
 					</parameter>
 					<parameter name="maxAttempts" type="int">
 						<description>
-						Number of evaluation windows, spread evenly over
-						[minSP, maxSP]. If unset the count is computed as
-						ceil((maxSP - minSP) / (windowDuration/2)) + 1, where
-						windowDuration is the model's window length in seconds,
-						clamped to [1,20]. Set it explicitly only to cap
-						inference cost, or higher to tighten strategy = best
-						pick times.
+						Number of evaluation windows, spread evenly from
+						minLatency to maxLatency. If unset the count is computed
+						as ceil((maxLatency - minLatency) / (windowDuration/2)) + 1,
+						where windowDuration is the model's window length in
+						seconds, clamped to [1,20], so it is 1 when minLatency
+						equals maxLatency. Set it explicitly to cap inference
+						cost, or higher to tighten pick times (with strategy =
+						best) or the pick latency (with strategy = fast). 1 = a
+						single window at maxLatency.
 						</description>
 					</parameter>
 					<parameter name="strategy" type="string" default="fast" values="fast,best">

@@ -36,11 +36,12 @@ namespace Processing {
  * @brief Deep-learning S picker running an arbitrary ONNX model (see
  *        OnnxSession), triggered by a reference P pick. Registered as
  *        "SDL1C" (vertical only) and "SDL3C" (Z+N+E) -- see DLPicker
- *        for the NComponents contract and the window/maxAttempts
- *        mechanism (here: minSP/maxSP are the smallest/largest S-P
- *        time to search, each window centred on an S at its target
- *        S-P time). An S whose true S-P time exceeds maxSP is not
- *        found, since the model never sees data beyond its own window.
+ *        for the NComponents contract and the minLatency/maxLatency/
+ *        maxAttempts window mechanism, here relative to the reference
+ *        P pick instead of a detector trigger. Which S-P times those
+ *        windows can reach depends on where in its window the model
+ *        places an onset (see README); an S beyond the latest window
+ *        is not found, since the model never sees data beyond it.
  *
  * feed() resamples each component to the model's sampleRate first
  * (skipped if seiscomp.picker.resample = false).
@@ -112,8 +113,8 @@ class DLSecondaryPicker : public SecondaryPicker {
 
 		std::unique_ptr<ComponentResampler<NComponents>> _rateAdapter;
 
-		// Window-end delays (s after the P pick), one per target S-P
-		// time in [minSP, maxSP]; computed once in setup().
+		// Window-end delays (s after the P pick); computed once in
+		// setup().
 		std::vector<double> _attemptDelays;
 		std::size_t         _nextAttempt;
 

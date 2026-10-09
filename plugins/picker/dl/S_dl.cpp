@@ -142,51 +142,49 @@ bool DLSecondaryPicker<NComponents>::setup(const Settings &settings) {
 
 	double windowDuration = session->windowDuration();
 
-	// The S picker searches an S-P time range, not a fixed delay:
-	// minSP/maxSP are the smallest/largest S-P time to look for, and
-	// each window is placed so an S at its target S-P time is
-	// centred in it (delay = S-P + windowDuration/2). maxSP must
-	// cover the network's largest expected S-P time; 60 s is a
-	// reasonable regional-network default.
-	double minSP = 0.0;
-	double maxSP = 60.0;
-
-	try { minSP = settings.getDouble("spicker." + methodID() + ".minSP"); }
+	// minLatency/maxLatency: seconds after the reference P pick where
+	// the earliest/latest window *ends*, exactly as for DLPicker. Which
+	// S-P times a window can pick depends on where in its window the
+	// model can place an onset (see README): a model picking a centred
+	// S needs latency ~ S-P + windowDuration/2, one trained on onsets
+	// near the window's right edge only latency ~ S-P + a second or
+	// two. The defaults sweep S-P in [0, 60] s for a centred model,
+	// which suits a regional network. minLatency's default is capped
+	// at maxLatency, so configuring a maxLatency below
+	// windowDuration/2 alone is honoured rather than clamped back up
+	// to minLatency below.
+	double maxLatency = 60.0 + windowDuration * 0.5;
+	try { maxLatency = settings.getDouble("spicker." + methodID() + ".maxLatency"); }
 	catch ( ... ) {}
-	try { maxSP = settings.getDouble("spicker." + methodID() + ".maxSP"); }
+
+	double minLatency = std::min(windowDuration * 0.5, maxLatency);
+	try { minLatency = settings.getDouble("spicker." + methodID() + ".minLatency"); }
 	catch ( ... ) {}
-	if ( minSP < 0.0 ) {
-		minSP = 0.0;
-	}
-	if ( maxSP < minSP ) {
-		maxSP = minSP;
+	if ( maxLatency < minLatency ) {
+		maxLatency = minLatency;
 	}
 
-	// Auto-computed if unset so consecutive window centers are at
-	// most half a model window apart (an S anywhere in range always
-	// lands in a window's usable interior).
+	// Auto-computed if unset so consecutive window ends are at most
+	// half a model window apart (full coverage).
 	int maxAttempts = 0;
 	try { maxAttempts = settings.getInt("spicker." + methodID() + ".maxAttempts"); }
 	catch ( ... ) {}
 	if ( maxAttempts < 1 ) {
-		double span = maxSP - minSP;
+		double span = maxLatency - minLatency;
 		maxAttempts = span <= 0.0
 		    ? 1
 		    : std::min(20, (int)std::ceil(span / (windowDuration * 0.5)) + 1);
 	}
 
-	// delay = S-P + windowDuration/2 centers that S in the window.
-	auto delayForSP = [&](double sp) { return sp + windowDuration * 0.5; };
-
 	_attemptDelays.clear();
 	if ( maxAttempts == 1 ) {
-		// Single window, centered on the middle of the S-P range.
-		_attemptDelays.push_back(delayForSP(0.5 * (minSP + maxSP)));
+		// Single window, placed at maxLatency.
+		_attemptDelays.push_back(maxLatency);
 	}
 	else {
 		for ( int i = 0; i < maxAttempts; ++i ) {
-			_attemptDelays.push_back(delayForSP(
-				minSP + (maxSP - minSP) * i / (maxAttempts - 1)));
+			_attemptDelays.push_back(
+				minLatency + (maxLatency - minLatency) * i / (maxAttempts - 1));
 		}
 	}
 	_nextAttempt = 0;
@@ -204,28 +202,13 @@ bool DLSecondaryPicker<NComponents>::setup(const Settings &settings) {
 		if ( std::fabs(v - kIgnoredWindowSentinel) > 1e-9 ) {
 			SEISCOMP_WARNING("[%s] spicker.%s.%s = %.3f is not used by "
 			                  "deep-learning pickers and is ignored -- use "
-			                  "minSP/maxSP/maxAttempts instead",
+			                  "minLatency/maxLatency/maxAttempts instead",
 			                  methodID().c_str(), methodID().c_str(), key, v);
 		}
 	};
 	warnIfOverridden("noiseBegin");
 	warnIfOverridden("signalBegin");
 	warnIfOverridden("signalEnd");
-
-	// minDelay/maxDelay were replaced (and re-based on S-P time) by
-	// minSP/maxSP -- warn rather than silently ignore an old config.
-	auto warnRenamed = [&](const char *oldKey, const char *newKey) {
-		try {
-			settings.getDouble(("spicker." + methodID() + "." + oldKey).c_str());
-			SEISCOMP_WARNING("[%s] spicker.%s.%s was replaced by %s (now an S-P "
-			                  "time, not a window-end delay) and is ignored",
-			                  methodID().c_str(), methodID().c_str(), oldKey,
-			                  newKey);
-		}
-		catch ( ... ) {}
-	};
-	warnRenamed("minDelay", "minSP");
-	warnRenamed("maxDelay", "maxSP");
 
 	// Requested window spans every attempt: earliest start to latest
 	// end, relative to the reference P pick.

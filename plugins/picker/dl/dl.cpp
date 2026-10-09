@@ -220,20 +220,6 @@ bool DLPicker<NComponents>::setup(const Settings &settings) {
 	warnIfOverridden("signalBegin");
 	warnIfOverridden("signalEnd");
 
-	// minDelay/maxDelay were renamed to minLatency/maxLatency -- warn
-	// rather than silently ignore an old config.
-	auto warnRenamed = [&](const char *oldKey, const char *newKey) {
-		try {
-			settings.getDouble(("picker." + methodID() + "." + oldKey).c_str());
-			SEISCOMP_WARNING("[%s] picker.%s.%s was renamed to %s and the old "
-			                  "name is ignored", methodID().c_str(),
-			                  methodID().c_str(), oldKey, newKey);
-		}
-		catch ( ... ) {}
-	};
-	warnRenamed("minDelay", "minLatency");
-	warnRenamed("maxDelay", "maxLatency");
-
 	// Requested window spans every attempt: earliest start to latest end.
 	setNoiseStart(_attemptDelays.front() - windowDuration);
 	setSignalStart(_attemptDelays.front() - windowDuration);

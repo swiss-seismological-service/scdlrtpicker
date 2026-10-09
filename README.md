@@ -302,23 +302,23 @@ picker.DL3C.strategy = best     # evaluate every window, keep the most confident
 ```
 
 For S a single window is usually not enough: the S picker runs off a P pick and
-the S–P time varies with distance, so sweep the S–P range instead:
+the S–P time varies with distance, so sweep the S–P range instead. With a
+centred 30 s model (`W/2 = 15`), searching S–P from 3 to 45 s:
 
 ```
-# spicker.SDL3C.maxAttempts     # unset: auto count; or select how many windows to compute over [minSP, maxSP]
-spicker.SDL3C.minSP    = 3      # smallest S–P searched
-spicker.SDL3C.maxSP    = 45     # largest S–P searched, and the hard reach limit
-spicker.SDL3C.strategy = best   # evaluate every window, keep the most confident
+# spicker.SDL3C.maxAttempts       # unset: auto count; or select how many windows to compute over [minLatency, maxLatency]
+spicker.SDL3C.minLatency = 18     # 3 + 15: earliest window centred on S–P = 3 s
+spicker.SDL3C.maxLatency = 60     # 45 + 15: latest window centred on S–P = 45 s, the reach limit
+spicker.SDL3C.strategy   = best   # evaluate every window, keep the most confident
 ```
 
-If the S–P time is predictable and well within the model window, and the model
-tolerates an off-centre S, one window is enough:
+If the S–P time is predictable, one window is enough:
 
 ```
-# spicker.SDL3C.maxAttempts     # unset: equal minSP/maxSP already gives one window
-spicker.SDL3C.minSP = 12        # minSP == maxSP => one window, centred on S–P = 12 s
-spicker.SDL3C.maxSP = 12
-# spicker.SDL3C.strategy       # not relevant with a single window
+spicker.SDL3C.maxAttempts = 1     # one window
+spicker.SDL3C.maxLatency  = 27    # 12 + 15: centred on S–P = 12 s
+# spicker.SDL3C.minLatency        # disregarded when maxAttempts is 1
+# spicker.SDL3C.strategy          # not relevant with a single window
 ```
 
 #### Fast picks (early warning, fast association)
@@ -328,20 +328,34 @@ Start close to the reference and accept the first confident window:
 For P, use first window ≈ all pre-trigger buffer:
 
 ```
-# picker.DL3C.maxAttempts        # unset: auto count; or select how many windows to compute over [minLatency, maxLatency]
-picker.DL3C.minLatency = 1       # earliest window ends 1 s after the trigger
-picker.DL3C.maxLatency = 8       # stop sweeping 8 s after the trigger
-picker.DL3C.strategy = fast      # accept the first window over minConfidence
+picker.DL3C.minLatency  = 1      # earliest window ends 1 s after the trigger
+picker.DL3C.maxLatency  = 8      # stop sweeping 8 s after the trigger
+picker.DL3C.maxAttempts = 8      # windows 1 s apart: 1, 2, ..., 8 s after the trigger
+picker.DL3C.strategy    = fast   # accept the first window over minConfidence
 ```
 
-For S, keep the S–P range short:
+Set `maxAttempts` explicitly here: unset, it spaces the windows half a model
+window apart, which for a 30 s model leaves just two windows, at 1 s and 8 s,
+so a pick the first window isn't confident about waits until 8 s.
+
+For S, the model must be trained on onsets near the window end, as for P.
+With one that picks an S about 1 s before the window end (`e = 1`),
+searching S–P from 0 to 15 s with a window every second:
 
 ```
-# spicker.SDL3C.maxAttempts       # unset: auto count; or select how many windows to compute over [minSP, maxSP]
-spicker.SDL3C.minSP    = 0       # from S–P = 0 ...
-spicker.SDL3C.maxSP    = 15      # ... to S–P = 15 s (an S beyond this is not found)
-spicker.SDL3C.strategy = fast    # accept the first window over minConfidence
+spicker.SDL3C.minLatency  = 1     # 0 + 1: earliest window ends 1 s after the P pick
+spicker.SDL3C.maxLatency  = 16    # 15 + 1: an S beyond S–P = 15 s is not found
+spicker.SDL3C.maxAttempts = 16    # windows 1 s apart: S picked ~1–2 s after its onset
+spicker.SDL3C.strategy    = fast  # accept the first window over minConfidence
 ```
+
+Leaving `maxAttempts` unset here would space the windows `W/2` apart, so the S
+pick could come up to `W/2` later than it needs to.
+
+Early windows like these are mostly data from before the P pick: the first one
+above ends just 1 s after it. The S picker only searches the part of each
+window after the P pick, so neither the P arrival itself nor the noise before
+it can become the S pick; a window that ends before the P pick is skipped.
 
 The first pick can be emitted with near-zero added latency; later windows are
 only used if the early ones are not confident enough.

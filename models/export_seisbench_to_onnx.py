@@ -268,16 +268,21 @@ def self_check(onnx_path, sampling_rate, window_length, num_components, labels, 
 
     # Mirrors Seiscomp::Processing::OnnxPickerStream::evaluate()'s
     # per-channel normalization exactly, so the self-check probes the
-    # model the same way the C++ runtime actually will.
+    # model the same way the C++ runtime actually will: "none" passes
+    # the data through untouched; "std" and "peak" both demean first,
+    # then divide by the unbiased (N-1) std, floored at sqrt(1e-12),
+    # or by the peak of the demeaned signal, floored at 1e-10.
     normed = np.empty_like(data)
     for c in range(num_components):
         x = data[c]
-        if normalization == "std":
-            normed[c] = (x - x.mean()) / max(x.std(), 1e-12)
-        elif normalization == "peak":
-            normed[c] = x / max(np.abs(x).max(), 1e-12)
-        else:
+        if normalization == "none":
             normed[c] = x
+            continue
+        d = x - x.mean()
+        if normalization == "std":
+            normed[c] = d / np.sqrt(max(1e-12, (d * d).sum() / max(1, window_length - 1)))
+        else:
+            normed[c] = d / max(np.abs(d).max(), 1e-10)
 
     input_tensor = normed.reshape(1, num_components, window_length).astype(np.float32)
 

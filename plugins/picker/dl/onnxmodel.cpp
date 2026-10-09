@@ -208,9 +208,15 @@ bool OnnxSession::load(const std::string &path) {
 
 	_config.normalization = StdDev;
 	if ( getString("seiscomp.picker.normalization", false, tmp) ) {
-		if ( tmp == "peak" ) _config.normalization = Peak;
+		if ( tmp == "std" ) _config.normalization = StdDev;
+		else if ( tmp == "peak" ) _config.normalization = Peak;
 		else if ( tmp == "none" ) _config.normalization = None;
-		else _config.normalization = StdDev;
+		else {
+			SEISCOMP_ERROR("OnnxSession: '%s' seiscomp.picker.normalization "
+			               "= '%s' is not one of 'std', 'peak', 'none'",
+			               path.c_str(), tmp.c_str());
+			return false;
+		}
 	}
 
 	_config.resample = true;

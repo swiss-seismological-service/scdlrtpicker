@@ -533,14 +533,92 @@ bool ReadUncertainty(const std::map<std::string, std::vector<float>> &probs,
 
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-double ConfidenceToUncertainty(double confidence, double minConfidence,
-                                double uncertaintyAtMinConfidence,
-                                double uncertaintyAtMaxConfidence) {
-	double span = 1.0 - minConfidence;
-	double t = span > 0.0 ? (confidence - minConfidence) / span : 1.0;
-	t = std::max(0.0, std::min(1.0, t));
-	return uncertaintyAtMinConfidence +
-	       t * (uncertaintyAtMaxConfidence - uncertaintyAtMinConfidence);
+bool ParseUncertaintyMap(const std::string &spec, UncertaintyMap &map,
+                          std::string &error) {
+	map.clear();
+
+	auto trim = [](const std::string &s) {
+		size_t b = s.find_first_not_of(" \t");
+		if ( b == std::string::npos ) return std::string();
+		size_t e = s.find_last_not_of(" \t");
+		return s.substr(b, e - b + 1);
+	};
+
+	// Whole-string conversion only: "0.4x" or "" is an error, not 0.4/0.
+	auto toDouble = [](const std::string &s, double &value) {
+		if ( s.empty() ) return false;
+		char *end = nullptr;
+		value = std::strtod(s.c_str(), &end);
+		return *end == '\0' && std::isfinite(value);
+	};
+
+	if ( trim(spec).empty() ) {
+		return true;
+	}
+
+	std::stringstream ss(spec);
+	std::string item;
+	while ( std::getline(ss, item, ',') ) {
+		item = trim(item);
+		size_t colon = item.find(':');
+		double confidence, uncertainty;
+		if ( colon == std::string::npos
+		  || !toDouble(trim(item.substr(0, colon)), confidence)
+		  || !toDouble(trim(item.substr(colon + 1)), uncertainty) ) {
+			error = "'" + item + "' is not a confidence:uncertainty pair";
+			map.clear();
+			return false;
+		}
+		if ( confidence < 0.0 || confidence > 1.0 ) {
+			error = "confidence in '" + item + "' is outside [0,1]";
+			map.clear();
+			return false;
+		}
+		if ( uncertainty < 0.0 ) {
+			error = "uncertainty in '" + item + "' is negative";
+			map.clear();
+			return false;
+		}
+		if ( !map.empty() && confidence < map.back().first ) {
+			error = "'" + item + "' is out of order, confidences must not decrease";
+			map.clear();
+			return false;
+		}
+		if ( map.size() >= 2 && confidence == map[map.size() - 1].first
+		     && confidence == map[map.size() - 2].first ) {
+			error = "more than two entries share the confidence of '" + item + "'";
+			map.clear();
+			return false;
+		}
+		map.emplace_back(confidence, uncertainty);
+	}
+
+	return true;
+}
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+double ConfidenceToUncertainty(double confidence, const UncertaintyMap &map) {
+	if ( confidence < map.front().first ) {
+		return map.front().second;
+	}
+
+	// Last point at or below confidence; scanning from the end makes a
+	// step's second point win at the step's own confidence.
+	size_t i = map.size() - 1;
+	while ( i > 0 && map[i].first > confidence ) {
+		--i;
+	}
+	if ( i + 1 == map.size() ) {
+		return map.back().second;
+	}
+
+	// map[i].first <= confidence < map[i+1].first, so no division by 0.
+	const auto &a = map[i];
+	const auto &b = map[i + 1];
+	double t = (confidence - a.first) / (b.first - a.first);
+	return a.second + t * (b.second - a.second);
 }
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 

@@ -278,16 +278,27 @@ bool ReadUncertainty(const std::map<std::string, std::vector<float>> &probs,
                       const std::vector<std::string> &uncertaintyLabels, int idx,
                       double &lower, double &upper);
 
+//! (confidence, time uncertainty in seconds) points, sorted by
+//! confidence -- see ParseUncertaintyMap()/ConfidenceToUncertainty().
+//! Empty means no confidence-derived uncertainty is configured.
+using UncertaintyMap = std::vector<std::pair<double, double>>;
+
+//! Parses an uncertaintyMap setting: comma-separated
+//! "confidence:uncertainty" pairs, e.g. "0.4:0.5, 0.7:0.2, 1:0.05".
+//! Confidences must be in [0,1] and non-decreasing, with at most two
+//! entries sharing one confidence (a step); uncertainties are seconds,
+//! >= 0. A blank spec yields an empty map. Returns false, with the
+//! reason in error, if spec violates any of that.
+bool ParseUncertaintyMap(const std::string &spec, UncertaintyMap &map,
+                          std::string &error);
+
 //! Derives a symmetric time uncertainty (seconds) from a pick's model
 //! confidence, for a model that has no seiscomp.picker.uncertaintyLabels
-//! of its own. Linearly interpolates confidence in [minConfidence, 1]
-//! to uncertainty in [uncertaintyAtMaxConfidence, uncertaintyAtMinConfidence],
-//! clamping confidence to that range first (so a confidence at or below
-//! minConfidence never happens in practice, but is handled the same as
-//! minConfidence itself).
-double ConfidenceToUncertainty(double confidence, double minConfidence,
-                                double uncertaintyAtMinConfidence,
-                                double uncertaintyAtMaxConfidence);
+//! of its own: linear interpolation between the points of map, the
+//! first/last uncertainty below/above them. At a step (two points with
+//! the same confidence) the second point applies from that confidence
+//! on. map must not be empty.
+double ConfidenceToUncertainty(double confidence, const UncertaintyMap &map);
 
 
 }

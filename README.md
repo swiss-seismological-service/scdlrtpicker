@@ -180,9 +180,8 @@ since `SecondaryPicker::Result` has no polarity field. Without
 the picked phase's time uncertainty in seconds at the same sample index as the
 pick. One name is used for both the lower and upper uncertainty. Without
 `uncertaintyLabels`, the pick's uncertainty is left unset, unless
-`uncertaintyAtMinConfidence`/`uncertaintyAtMaxConfidence` (both P and S) are
-configured, which linearly map the pick's own confidence to a derived
-uncertainty instead.
+`uncertaintyMap` (both P and S) is configured, which derives a symmetric
+uncertainty from the pick's own confidence instead.
 
 ### Metadata keys
 

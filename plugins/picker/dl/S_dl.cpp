@@ -117,19 +117,17 @@ bool DLSecondaryPicker<NComponents>::setup(const Settings &settings) {
 
 	// Confidence-derived uncertainty fallback; only used if the model
 	// has no uncertaintyLabels of its own -- see S_dl.h and
-	// ConfidenceToUncertainty(). Both must be configured together.
-	_uncertaintyAtMinConfidence = Core::None;
-	_uncertaintyAtMaxConfidence = Core::None;
-	try { _uncertaintyAtMinConfidence = settings.getDouble("spicker." + methodID() + ".uncertaintyAtMinConfidence"); }
+	// ConfidenceToUncertainty(). Unset or blank: no fallback.
+	string uncertaintyMap;
+	try { uncertaintyMap = settings.getString("spicker." + methodID() + ".uncertaintyMap"); }
 	catch ( ... ) {}
-	try { _uncertaintyAtMaxConfidence = settings.getDouble("spicker." + methodID() + ".uncertaintyAtMaxConfidence"); }
-	catch ( ... ) {}
-	if ( _uncertaintyAtMinConfidence.has_value() != _uncertaintyAtMaxConfidence.has_value() ) {
-		SEISCOMP_WARNING("[%s] uncertaintyAtMinConfidence and uncertaintyAtMaxConfidence "
-		                  "must be configured together -- ignoring the one that was set",
-		                  methodID().c_str());
-		_uncertaintyAtMinConfidence = Core::None;
-		_uncertaintyAtMaxConfidence = Core::None;
+	string uncertaintyMapError;
+	if ( !ParseUncertaintyMap(uncertaintyMap, _uncertaintyMap, uncertaintyMapError) ) {
+		SEISCOMP_ERROR("[%s] spicker.%s.uncertaintyMap = '%s': %s",
+		               methodID().c_str(), methodID().c_str(), uncertaintyMap.c_str(),
+		               uncertaintyMapError.c_str());
+		setStatus(Error, 0);
+		return false;
 	}
 
 	_strategy = Strategy::Fast;
@@ -380,10 +378,9 @@ void DLSecondaryPicker<NComponents>::process(const Record *rec, const DoubleArra
 		// Fallback for a model without uncertaintyLabels: derive a
 		// symmetric uncertainty from the pick's own confidence instead.
 		// See S_dl.h and ConfidenceToUncertainty().
-		if ( lowerUncertainty < 0.0 && _uncertaintyAtMinConfidence && _uncertaintyAtMaxConfidence ) {
-			lowerUncertainty = upperUncertainty = ConfidenceToUncertainty(
-				bestVal, _minConfidence,
-				*_uncertaintyAtMinConfidence, *_uncertaintyAtMaxConfidence);
+		if ( lowerUncertainty < 0.0 && !_uncertaintyMap.empty() ) {
+			lowerUncertainty = upperUncertainty =
+				ConfidenceToUncertainty(bestVal, _uncertaintyMap);
 		}
 
 		SEISCOMP_DEBUG("[%s/%s] attempt %zu/%zu: confidence=%.2f "

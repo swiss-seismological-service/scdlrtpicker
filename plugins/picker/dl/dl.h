@@ -68,13 +68,12 @@ namespace Processing {
  * except polarityMinConfidence.
  *
  * A model without uncertaintyLabels can still get a derived uncertainty
- * by configuring uncertaintyAtMinConfidence/uncertaintyAtMaxConfidence
- * (both required together, unset by default): the pick's own confidence
- * is linearly mapped from [minConfidence, 1] to
- * [uncertaintyAtMaxConfidence, uncertaintyAtMinConfidence] seconds (see
- * onnxmodel.h::ConfidenceToUncertainty()). Ignored whenever the model
- * already provides uncertaintyLabels -- a real per-sample value always
- * wins over this heuristic.
+ * by configuring uncertaintyMap (unset by default): "confidence:seconds"
+ * points the pick's own confidence is linearly interpolated between,
+ * steps allowed (see onnxmodel.h::ParseUncertaintyMap() and
+ * ConfidenceToUncertainty()). Ignored whenever the model already
+ * provides uncertaintyLabels -- a real per-sample value always wins
+ * over this heuristic.
  */
 template <int NComponents>
 class DLPicker : public Picker {
@@ -140,10 +139,9 @@ class DLPicker : public Picker {
 		bool                _lastPolaritySet;
 
 		// Confidence-derived uncertainty fallback for a model without
-		// uncertaintyLabels; both unset unless both are configured. See
-		// the class comment and ConfidenceToUncertainty().
-		OPT(double)         _uncertaintyAtMinConfidence;
-		OPT(double)         _uncertaintyAtMaxConfidence;
+		// uncertaintyLabels; empty unless configured. See the class
+		// comment and ConfidenceToUncertainty().
+		UncertaintyMap      _uncertaintyMap;
 
 		std::unique_ptr<ComponentResampler<NComponents>> _rateAdapter;
 

@@ -85,24 +85,25 @@
 						reported as undecidable.
 						</description>
 					</parameter>
-					<parameter name="uncertaintyAtMinConfidence" type="double" unit="s">
+					<parameter name="uncertaintyMap" type="string">
 						<description>
-						Time uncertainty to report when the pick's confidence
-						is at minConfidence, the worst accepted case. Together
-						with uncertaintyAtMaxConfidence, linearly maps
-						confidence to a derived time uncertainty for a model
-						that does not export seiscomp.picker.uncertaintyLabels;
-						ignored if it does (a real per-sample value always
-						wins), and has no effect unless
-						uncertaintyAtMaxConfidence is also set. Unset by
-						default: no uncertainty is derived.
-						</description>
-					</parameter>
-					<parameter name="uncertaintyAtMaxConfidence" type="double" unit="s">
-						<description>
-						Time uncertainty to report when the pick's confidence
-						is 1, the best possible case. See
-						uncertaintyAtMinConfidence; both must be set together.
+						Derives the pick's time uncertainty from its confidence,
+						for a model that does not export
+						seiscomp.picker.uncertaintyLabels; ignored if it does (a
+						real per-sample value always wins). Unset by default: no
+						uncertainty is derived.
+
+						Format: comma-separated confidence:uncertainty pairs,
+						uncertainty in seconds, sorted by confidence. Between
+						two pairs the uncertainty is interpolated linearly; below
+						the first and above the last pair, their uncertainty
+						applies. Repeating a confidence makes a step, the second
+						pair applying from that confidence on.
+
+						Examples: &quot;0.4:0.5, 1:0.05&quot; maps confidence 0.4
+						to 0.5 s and 1 to 0.05 s, linearly in between.
+						&quot;0.4:0.4, 0.7:0.4, 0.7:0.1, 1:0.1&quot; gives 0.4 s below
+						confidence 0.7 and 0.1 s from 0.7 on.
 						</description>
 					</parameter>
 				</group>
@@ -181,24 +182,25 @@
 						reported as undecidable.
 						</description>
 					</parameter>
-					<parameter name="uncertaintyAtMinConfidence" type="double" unit="s">
+					<parameter name="uncertaintyMap" type="string">
 						<description>
-						Time uncertainty to report when the pick's confidence
-						is at minConfidence, the worst accepted case. Together
-						with uncertaintyAtMaxConfidence, linearly maps
-						confidence to a derived time uncertainty for a model
-						that does not export seiscomp.picker.uncertaintyLabels;
-						ignored if it does (a real per-sample value always
-						wins), and has no effect unless
-						uncertaintyAtMaxConfidence is also set. Unset by
-						default: no uncertainty is derived.
-						</description>
-					</parameter>
-					<parameter name="uncertaintyAtMaxConfidence" type="double" unit="s">
-						<description>
-						Time uncertainty to report when the pick's confidence
-						is 1, the best possible case. See
-						uncertaintyAtMinConfidence; both must be set together.
+						Derives the pick's time uncertainty from its confidence,
+						for a model that does not export
+						seiscomp.picker.uncertaintyLabels; ignored if it does (a
+						real per-sample value always wins). Unset by default: no
+						uncertainty is derived.
+
+						Format: comma-separated confidence:uncertainty pairs,
+						uncertainty in seconds, sorted by confidence. Between
+						two pairs the uncertainty is interpolated linearly; below
+						the first and above the last pair, their uncertainty
+						applies. Repeating a confidence makes a step, the second
+						pair applying from that confidence on.
+
+						Examples: &quot;0.4:0.5, 1:0.05&quot; maps confidence 0.4
+						to 0.5 s and 1 to 0.05 s, linearly in between.
+						&quot;0.4:0.4, 0.7:0.4, 0.7:0.1, 1:0.1&quot; gives 0.4 s below
+						confidence 0.7 and 0.1 s from 0.7 on.
 						</description>
 					</parameter>
 				</group>
@@ -272,24 +274,25 @@
 						accuracy).
 						</description>
 					</parameter>
-					<parameter name="uncertaintyAtMinConfidence" type="double" unit="s">
+					<parameter name="uncertaintyMap" type="string">
 						<description>
-						Time uncertainty to report when the pick's confidence
-						is at minConfidence, the worst accepted case. Together
-						with uncertaintyAtMaxConfidence, linearly maps
-						confidence to a derived time uncertainty for a model
-						that does not export seiscomp.picker.uncertaintyLabels;
-						ignored if it does (a real per-sample value always
-						wins), and has no effect unless
-						uncertaintyAtMaxConfidence is also set. Unset by
-						default: no uncertainty is derived.
-						</description>
-					</parameter>
-					<parameter name="uncertaintyAtMaxConfidence" type="double" unit="s">
-						<description>
-						Time uncertainty to report when the pick's confidence
-						is 1, the best possible case. See
-						uncertaintyAtMinConfidence; both must be set together.
+						Derives the pick's time uncertainty from its confidence,
+						for a model that does not export
+						seiscomp.picker.uncertaintyLabels; ignored if it does (a
+						real per-sample value always wins). Unset by default: no
+						uncertainty is derived.
+
+						Format: comma-separated confidence:uncertainty pairs,
+						uncertainty in seconds, sorted by confidence. Between
+						two pairs the uncertainty is interpolated linearly; below
+						the first and above the last pair, their uncertainty
+						applies. Repeating a confidence makes a step, the second
+						pair applying from that confidence on.
+
+						Examples: &quot;0.4:0.5, 1:0.05&quot; maps confidence 0.4
+						to 0.5 s and 1 to 0.05 s, linearly in between.
+						&quot;0.4:0.4, 0.7:0.4, 0.7:0.1, 1:0.1&quot; gives 0.4 s below
+						confidence 0.7 and 0.1 s from 0.7 on.
 						</description>
 					</parameter>
 				</group>
@@ -361,24 +364,25 @@
 						accuracy).
 						</description>
 					</parameter>
-					<parameter name="uncertaintyAtMinConfidence" type="double" unit="s">
+					<parameter name="uncertaintyMap" type="string">
 						<description>
-						Time uncertainty to report when the pick's confidence
-						is at minConfidence, the worst accepted case. Together
-						with uncertaintyAtMaxConfidence, linearly maps
-						confidence to a derived time uncertainty for a model
-						that does not export seiscomp.picker.uncertaintyLabels;
-						ignored if it does (a real per-sample value always
-						wins), and has no effect unless
-						uncertaintyAtMaxConfidence is also set. Unset by
-						default: no uncertainty is derived.
-						</description>
-					</parameter>
-					<parameter name="uncertaintyAtMaxConfidence" type="double" unit="s">
-						<description>
-						Time uncertainty to report when the pick's confidence
-						is 1, the best possible case. See
-						uncertaintyAtMinConfidence; both must be set together.
+						Derives the pick's time uncertainty from its confidence,
+						for a model that does not export
+						seiscomp.picker.uncertaintyLabels; ignored if it does (a
+						real per-sample value always wins). Unset by default: no
+						uncertainty is derived.
+
+						Format: comma-separated confidence:uncertainty pairs,
+						uncertainty in seconds, sorted by confidence. Between
+						two pairs the uncertainty is interpolated linearly; below
+						the first and above the last pair, their uncertainty
+						applies. Repeating a confidence makes a step, the second
+						pair applying from that confidence on.
+
+						Examples: &quot;0.4:0.5, 1:0.05&quot; maps confidence 0.4
+						to 0.5 s and 1 to 0.05 s, linearly in between.
+						&quot;0.4:0.4, 0.7:0.4, 0.7:0.1, 1:0.1&quot; gives 0.4 s below
+						confidence 0.7 and 0.1 s from 0.7 on.
 						</description>
 					</parameter>
 				</group>

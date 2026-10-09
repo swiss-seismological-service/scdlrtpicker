@@ -156,17 +156,16 @@ bool DLPicker<NComponents>::setup(const Settings &settings) {
 	double windowDuration = session->windowDuration();
 
 	// minLatency/maxLatency: seconds after the trigger where a window
-	// *ends* (hence "latency"). Both default to half the model window
-	// (single centred attempt); minLatency only matters when more than
-	// one window is tried. Defaulting minLatency to the same value as
-	// maxLatency ensures the clamping below is a no-op when neither is
-	// configured, so the centred default works for any window size.
-	double minLatency = windowDuration * 0.5;
+	// *ends* (hence "latency"). maxLatency defaults to half the model
+	// window (centred), minLatency to whatever maxLatency resolved to,
+	// so configuring maxLatency alone gives a single attempt there
+	// instead of being clamped back up to the centred default below.
 	double maxLatency = windowDuration * 0.5;
-
-	try { minLatency = settings.getDouble("picker." + methodID() + ".minLatency"); }
-	catch ( ... ) {}
 	try { maxLatency = settings.getDouble("picker." + methodID() + ".maxLatency"); }
+	catch ( ... ) {}
+
+	double minLatency = maxLatency;
+	try { minLatency = settings.getDouble("picker." + methodID() + ".minLatency"); }
 	catch ( ... ) {}
 	if ( maxLatency < minLatency ) {
 		maxLatency = minLatency;

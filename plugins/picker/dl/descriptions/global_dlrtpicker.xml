@@ -101,11 +101,12 @@
 					</parameter>
 					<parameter name="uncertaintyMap" type="string">
 						<description>
-						Derives the pick's time uncertainty from its confidence,
-						for a model that does not export
-						seiscomp.picker.uncertaintyLabels; ignored if it does (a
-						real per-sample value always wins). Unset by default: no
-						uncertainty is derived.
+						Derives the pick's time uncertainty from its confidence.
+						When set, it takes precedence over the uncertainty a
+						model exports with seiscomp.picker.uncertaintyLabels
+						(e.g. to calibrate or replace it). Unset by default: the
+						model's own uncertainty is used, if it exports one,
+						otherwise none is set.
 
 						Format: comma-separated confidence:uncertainty pairs,
 						uncertainty in seconds, sorted by confidence. Between
@@ -212,11 +213,12 @@
 					</parameter>
 					<parameter name="uncertaintyMap" type="string">
 						<description>
-						Derives the pick's time uncertainty from its confidence,
-						for a model that does not export
-						seiscomp.picker.uncertaintyLabels; ignored if it does (a
-						real per-sample value always wins). Unset by default: no
-						uncertainty is derived.
+						Derives the pick's time uncertainty from its confidence.
+						When set, it takes precedence over the uncertainty a
+						model exports with seiscomp.picker.uncertaintyLabels
+						(e.g. to calibrate or replace it). Unset by default: the
+						model's own uncertainty is used, if it exports one,
+						otherwise none is set.
 
 						Format: comma-separated confidence:uncertainty pairs,
 						uncertainty in seconds, sorted by confidence. Between
@@ -304,11 +306,12 @@
 					</parameter>
 					<parameter name="uncertaintyMap" type="string">
 						<description>
-						Derives the pick's time uncertainty from its confidence,
-						for a model that does not export
-						seiscomp.picker.uncertaintyLabels; ignored if it does (a
-						real per-sample value always wins). Unset by default: no
-						uncertainty is derived.
+						Derives the pick's time uncertainty from its confidence.
+						When set, it takes precedence over the uncertainty a
+						model exports with seiscomp.picker.uncertaintyLabels
+						(e.g. to calibrate or replace it). Unset by default: the
+						model's own uncertainty is used, if it exports one,
+						otherwise none is set.
 
 						Format: comma-separated confidence:uncertainty pairs,
 						uncertainty in seconds, sorted by confidence. Between
@@ -394,11 +397,12 @@
 					</parameter>
 					<parameter name="uncertaintyMap" type="string">
 						<description>
-						Derives the pick's time uncertainty from its confidence,
-						for a model that does not export
-						seiscomp.picker.uncertaintyLabels; ignored if it does (a
-						real per-sample value always wins). Unset by default: no
-						uncertainty is derived.
+						Derives the pick's time uncertainty from its confidence.
+						When set, it takes precedence over the uncertainty a
+						model exports with seiscomp.picker.uncertaintyLabels
+						(e.g. to calibrate or replace it). Unset by default: the
+						model's own uncertainty is used, if it exports one,
+						otherwise none is set.
 
 						Format: comma-separated confidence:uncertainty pairs,
 						uncertainty in seconds, sorted by confidence. Between

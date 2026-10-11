@@ -310,8 +310,8 @@ bool ParseUncertaintyMap(const std::string &spec, UncertaintyMap &map,
                           std::string &error);
 
 //! Derives a symmetric time uncertainty (seconds) from a pick's model
-//! confidence, for a model that has no seiscomp.picker.uncertaintyLabels
-//! of its own: linear interpolation between the points of map, the
+//! confidence (used instead of the model's seiscomp.picker.
+//! uncertaintyLabels when configured): linear interpolation between the points of map, the
 //! first/last uncertainty below/above them. At a step (two points with
 //! the same confidence) the second point applies from that confidence
 //! on. map must not be empty.

@@ -74,13 +74,12 @@ namespace Processing {
  * and polarity is left unset for one more than polarityMaxTilt
  * (default 20) degrees off vertical. Picks are not affected.
  *
- * A model without uncertaintyLabels can still get a derived uncertainty
- * by configuring uncertaintyMap (unset by default): "confidence:seconds"
- * points the pick's own confidence is linearly interpolated between,
- * steps allowed (see onnxmodel.h::ParseUncertaintyMap() and
- * ConfidenceToUncertainty()). Ignored whenever the model already
- * provides uncertaintyLabels -- a real per-sample value always wins
- * over this heuristic.
+ * Configuring uncertaintyMap (unset by default) derives the uncertainty
+ * from the pick's own confidence instead: "confidence:seconds" points
+ * the confidence is linearly interpolated between, steps allowed (see
+ * onnxmodel.h::ParseUncertaintyMap() and ConfidenceToUncertainty()).
+ * When set, it takes precedence over the model's uncertaintyLabels,
+ * e.g. to calibrate a model's uncertainties or to replace them.
  */
 template <int NComponents>
 class DLPicker : public Picker {
@@ -149,7 +148,7 @@ class DLPicker : public Picker {
 		// Whether the just-accepted pick's polarity was set
 		bool                _lastPolaritySet;
 
-		// Confidence-derived uncertainty fallback for a model without
+		// Confidence-derived uncertainty, overriding the model's
 		// uncertaintyLabels; empty unless configured. See the class
 		// comment and ConfidenceToUncertainty().
 		UncertaintyMap      _uncertaintyMap;

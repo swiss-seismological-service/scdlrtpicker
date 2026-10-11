@@ -57,10 +57,10 @@ namespace Processing {
  * default-constructed. No polarity: SecondaryPicker::Result has no
  * such field, so seiscomp.picker.polarityLabels is ignored here.
  *
- * A model without uncertaintyLabels can still get a derived uncertainty
- * by configuring uncertaintyMap (unset by default) -- see DLPicker's
- * class comment and onnxmodel.h::ConfidenceToUncertainty(). Ignored
- * whenever the model already provides uncertaintyLabels.
+ * Configuring uncertaintyMap (unset by default) derives the uncertainty
+ * from the pick's confidence instead, taking precedence over the
+ * model's uncertaintyLabels -- see DLPicker's class comment and
+ * onnxmodel.h::ConfidenceToUncertainty().
  *
  * strategy (see DLPicker) controls whether process() accepts the
  * first window clearing minConfidence ("fast", default) or evaluates
@@ -109,7 +109,7 @@ class DLSecondaryPicker : public SecondaryPicker {
 		// configured (e.g. "Sg").
 		std::string         _phaseHint;
 
-		// Confidence-derived uncertainty fallback for a model without
+		// Confidence-derived uncertainty, overriding the model's
 		// uncertaintyLabels; empty unless configured. See the class
 		// comment and ConfidenceToUncertainty().
 		UncertaintyMap      _uncertaintyMap;

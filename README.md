@@ -188,9 +188,9 @@ standard up-pointing sensor with positive gain. Picks are not affected.
 `P_lower,P_upper` (or a single `P_sigma` for a symmetric value): row(s) giving
 the picked phase's time uncertainty in seconds at the same sample index as the
 pick. One name is used for both the lower and upper uncertainty. Without
-`uncertaintyLabels`, the pick's uncertainty is left unset, unless
-`uncertaintyMap` (both P and S) is configured, which derives a symmetric
-uncertainty from the pick's own confidence instead.
+`uncertaintyLabels`, the pick's uncertainty is left unset, unless the option
+`uncertaintyMap` is used, which derives a symmetric uncertainty from the
+pick's own confidence.
 
 ### Metadata keys
 
@@ -472,13 +472,20 @@ duration.
 Pick time, phase hint and method ID (`DL1C` … `SDL3C`) as for any picker. The
 phase hint of a P pick comes from scautopick's own `phaseHint`;
 for an S pick, from this plugin's `spicker.SDL3C.phaseHint` /
-`spicker.SDL1C.phaseHint` binding parameter. The
-model confidence is carried in the pick's `snr` field **and** added as a
-`confidence` comment as a 0–1 value, not a classical signal-to-noise ratio.
+`spicker.SDL1C.phaseHint` binding parameter.
+
+The model confidence (a 0–1 value, not a classical signal-to-noise ratio) is
+passed to scautopick as the picker result's SNR, which scautopick writes as an
+`SNR` comment when `extraPickComments` is enabled. A P pick also gets it as a
+`confidence` comment, always. **An S pick cannot**: SeisComP's
+`SecondaryPicker` interface offers no hook to add comments to the pick
+(scautopick builds the S pick itself from `SecondaryPicker::Result`, which has
+no comment field), so for S picks the confidence is only available through
+`extraPickComments`.
 
 If the model declares `seiscomp.picker.polarityLabels` (P side only), the
 pick's polarity is set as well, alongside a `polarity_confidence` comment; if
-it declares `seiscomp.picker.uncertaintyLabels` (P and/or S), the pick's time
-lower/upper uncertainty are set. Both are left unset when the model doesn't
-declare the corresponding key — see "Polarity"/"Uncertainty" above.
+it declares `seiscomp.picker.uncertaintyLabels` (P and/or S), or
+`uncertaintyMap` is configured, the pick's time lower/upper uncertainty are
+set. Otherwise both are left unset — see "Polarity"/"Uncertainty" above.
 

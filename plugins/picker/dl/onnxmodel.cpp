@@ -576,7 +576,7 @@ bool ParseUncertaintyMap(const std::string &spec, UncertaintyMap &map,
 	while ( std::getline(ss, item, ',') ) {
 		item = trim(item);
 		size_t colon = item.find(':');
-		double confidence, uncertainty;
+		double confidence = 0.0, uncertainty = 0.0;
 		if ( colon == std::string::npos
 		  || !toDouble(trim(item.substr(0, colon)), confidence)
 		  || !toDouble(trim(item.substr(colon + 1)), uncertainty) ) {

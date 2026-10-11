@@ -115,9 +115,9 @@ bool DLSecondaryPicker<NComponents>::setup(const Settings &settings) {
 		_phaseHint = "S";
 	}
 
-	// Confidence-derived uncertainty fallback; only used if the model
-	// has no uncertaintyLabels of its own -- see S_dl.h and
-	// ConfidenceToUncertainty(). Unset or blank: no fallback.
+	// Confidence-derived uncertainty; takes precedence over the
+	// model's uncertaintyLabels -- see S_dl.h and
+	// ConfidenceToUncertainty(). Unset or blank: not used.
 	string uncertaintyMap;
 	try { uncertaintyMap = settings.getString("spicker." + methodID() + ".uncertaintyMap"); }
 	catch ( ... ) {}
@@ -369,25 +369,28 @@ void DLSecondaryPicker<NComponents>::process(const Record *rec, const DoubleArra
 		// a fraction of a sample.
 		Core::Time pickTime = windowStart + Core::TimeSpan(best / _stream.fsamp);
 
-		// No-op (both -1) unless the model declares
-		// seiscomp.picker.uncertaintyLabels; see S_dl.h.
+		// Both -1 unless the model declares
+		// seiscomp.picker.uncertaintyLabels or uncertaintyMap is set.
 		double lowerUncertainty = -1.0, upperUncertainty = -1.0;
-		bool hasNativeUncertainty = ReadUncertainty(probs, _onnxStream->config().uncertaintyLabels,
-		                                             best, lowerUncertainty, upperUncertainty);
-
-		// Fallback for a model without uncertaintyLabels: derive a
-		// symmetric uncertainty from the pick's own confidence instead.
-		// See S_dl.h and ConfidenceToUncertainty().
-		if ( lowerUncertainty < 0.0 && !_uncertaintyMap.empty() ) {
+		// A configured uncertaintyMap takes precedence over the
+		// model's own uncertainty rows: a symmetric uncertainty
+		// derived from the pick's confidence. See S_dl.h and
+		// ConfidenceToUncertainty().
+		bool derivedUncertainty = !_uncertaintyMap.empty();
+		if ( derivedUncertainty ) {
 			lowerUncertainty = upperUncertainty =
 				ConfidenceToUncertainty(bestVal, _uncertaintyMap);
+		}
+		else {
+			ReadUncertainty(probs, _onnxStream->config().uncertaintyLabels,
+			                best, lowerUncertainty, upperUncertainty);
 		}
 
 		SEISCOMP_DEBUG("[%s/%s] attempt %zu/%zu: confidence=%.2f "
 		               "uncertainty=%.2f/%.2fs%s (ref=%s offset=%.3fs window=%.3fs)",
 		               methodID().c_str(), station.c_str(), _nextAttempt, _attemptDelays.size(),
 		               bestVal, lowerUncertainty, upperUncertainty,
-		               (lowerUncertainty >= 0.0 && !hasNativeUncertainty) ? " (derived)" : "",
+		               derivedUncertainty ? " (uncertaintyMap)" : "",
 		               _trigger.onset.iso().c_str(), double(windowStart - _trigger.onset),
 		               _onnxStream->windowDuration());
 

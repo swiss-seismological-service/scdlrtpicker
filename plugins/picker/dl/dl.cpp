@@ -155,9 +155,9 @@ bool DLPicker<NComponents>::setup(const Settings &settings) {
 		}
 	}
 
-	// Confidence-derived uncertainty fallback; only used if the model
-	// has no uncertaintyLabels of its own -- see dl.h and
-	// ConfidenceToUncertainty(). Unset or blank: no fallback.
+	// Confidence-derived uncertainty; takes precedence over the
+	// model's uncertaintyLabels -- see dl.h and
+	// ConfidenceToUncertainty(). Unset or blank: not used.
 	string uncertaintyMap;
 	try { uncertaintyMap = settings.getString("picker." + methodID() + ".uncertaintyMap"); }
 	catch ( ... ) {}
@@ -472,15 +472,18 @@ void DLPicker<NComponents>::process(const Record *record, const DoubleArray &) {
 			polarity = up ? POSITIVE : NEGATIVE;
 		}
 		double lowerUncertainty = -1.0, upperUncertainty = -1.0;
-		bool hasNativeUncertainty = ReadUncertainty(probs, cfg.uncertaintyLabels, pickIdx,
-		                                             lowerUncertainty, upperUncertainty);
-
-		// Fallback for a model without uncertaintyLabels: derive a
-		// symmetric uncertainty from the pick's own confidence instead.
-		// See dl.h and ConfidenceToUncertainty().
-		if ( lowerUncertainty < 0.0 && !_uncertaintyMap.empty() ) {
+		// A configured uncertaintyMap takes precedence over the
+		// model's own uncertainty rows: a symmetric uncertainty
+		// derived from the pick's confidence. See dl.h and
+		// ConfidenceToUncertainty().
+		bool derivedUncertainty = !_uncertaintyMap.empty();
+		if ( derivedUncertainty ) {
 			lowerUncertainty = upperUncertainty =
 				ConfidenceToUncertainty(pickConfidence, _uncertaintyMap);
+		}
+		else {
+			ReadUncertainty(probs, cfg.uncertaintyLabels, pickIdx,
+			                lowerUncertainty, upperUncertainty);
 		}
 
 		SEISCOMP_DEBUG("[%s/%s] attempt %zu/%zu: confidence=%.2f polarity=%s(%.2f) "
@@ -489,7 +492,7 @@ void DLPicker<NComponents>::process(const Record *record, const DoubleArray &) {
 		               pickConfidence,
 		               polarity ? (*polarity == POSITIVE ? "up" : "down") : "-",
 		               polarityConfidence, lowerUncertainty, upperUncertainty,
-		               (lowerUncertainty >= 0.0 && !hasNativeUncertainty) ? " (derived)" : "",
+		               derivedUncertainty ? " (uncertaintyMap)" : "",
 		               _trigger.iso().c_str(), double(windowStart - _trigger),
 		               _onnxStream->windowDuration());
 

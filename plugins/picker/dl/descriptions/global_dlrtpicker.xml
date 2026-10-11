@@ -85,6 +85,20 @@
 						reported as undecidable.
 						</description>
 					</parameter>
+					<parameter name="polarityMaxTilt" type="double" default="20" unit="deg">
+						<description>
+						Maximum angle (in degrees) between the vertical
+						channel's axis, from its inventory dip, and the true
+						vertical for the pick's polarity to be set. The model's
+						polarity refers to the channel's counts: for a sensor
+						pointing down (dip near +90) or with a negative gain,
+						up and down are swapped to refer to the ground motion.
+						For a channel further off vertical, the first motion
+						also depends on the horizontal motion, so polarity is
+						left unset. Picks are not affected. Only relevant if the
+						model also exports seiscomp.picker.polarityLabels.
+						</description>
+					</parameter>
 					<parameter name="uncertaintyMap" type="string">
 						<description>
 						Derives the pick's time uncertainty from its confidence,
@@ -180,6 +194,20 @@
 						seiscomp.picker.polarityLabels; ignored otherwise.
 						Below this, polarity is left unset rather than
 						reported as undecidable.
+						</description>
+					</parameter>
+					<parameter name="polarityMaxTilt" type="double" default="20" unit="deg">
+						<description>
+						Maximum angle (in degrees) between the vertical
+						channel's axis, from its inventory dip, and the true
+						vertical for the pick's polarity to be set. The model's
+						polarity refers to the channel's counts: for a sensor
+						pointing down (dip near +90) or with a negative gain,
+						up and down are swapped to refer to the ground motion.
+						For a channel further off vertical, the first motion
+						also depends on the horizontal motion, so polarity is
+						left unset. Picks are not affected. Only relevant if the
+						model also exports seiscomp.picker.polarityLabels.
 						</description>
 					</parameter>
 					<parameter name="uncertaintyMap" type="string">

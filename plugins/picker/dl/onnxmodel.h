@@ -270,6 +270,23 @@ OPT(int) ReadPolarity(const std::map<std::string, std::vector<float>> &probs,
                        const std::vector<std::string> &polarityLabels, int idx,
                        double minConfidence, double &confidence);
 
+//! How the model's first-motion polarity relates to ground motion,
+//! given the inventory orientation of the vertical channel. The model
+//! sees raw counts and takes positive counts on the vertical as "up".
+enum class PolaritySense {
+	Direct,    //!< sensor points up (positive gain): use as is
+	Inverted,  //!< sensor points down or has a negative gain: swap up/down
+	Unusable   //!< too far from vertical: polarity is meaningless
+};
+
+//! The PolaritySense of a vertical channel with the given inventory dip
+//! (degrees, -90 = up, +90 = down) and gain. A dip within maxTilt
+//! degrees of -90 or +90 gives Direct or Inverted (inverted again by a
+//! negative gain), any other dip Unusable. An unknown dip (outside
+//! [-90, 90], e.g. Processing::Stream's 999) or gain (0) counts as the
+//! standard up-pointing, positive-gain sensor.
+PolaritySense VerticalPolaritySense(double dip, double gain, double maxTilt);
+
 //! Reads the picked phase's time uncertainty in seconds at sample idx
 //! from the row(s) named by uncertaintyLabels (one row = symmetric,
 //! two = [lower, upper]). Returns false, leaving lower/upper at -1,

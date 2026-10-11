@@ -67,6 +67,13 @@ namespace Processing {
  * supported. Neither requires any config beyond the model itself,
  * except polarityMinConfidence.
  *
+ * The model's polarity refers to the counts of the vertical channel;
+ * setup() relates it to the ground motion from the channel's inventory
+ * dip and gain sign (see onnxmodel.h::VerticalPolaritySense()): up and
+ * down are swapped for a sensor pointing down or with a negative gain,
+ * and polarity is left unset for one more than polarityMaxTilt
+ * (default 20) degrees off vertical. Picks are not affected.
+ *
  * A model without uncertaintyLabels can still get a derived uncertainty
  * by configuring uncertaintyMap (unset by default): "confidence:seconds"
  * points the pick's own confidence is linearly interpolated between,
@@ -134,6 +141,10 @@ class DLPicker : public Picker {
 		// see the class comment.
 		double              _polarityMinConfidence;
 		double              _lastPolarityConfidence;
+
+		// The vertical channel's orientation as it affects polarity;
+		// set in setup(), see the class comment.
+		PolaritySense       _polaritySense;
 
 		// Whether the just-accepted pick's polarity was set
 		bool                _lastPolaritySet;

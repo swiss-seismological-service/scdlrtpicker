@@ -28,6 +28,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <mutex>
+#include <set>
 
 
 using namespace std;
@@ -43,6 +45,15 @@ namespace {
 // it unambiguously means "left untouched".
 const double kIgnoredWindowSentinel = -1.0;
 
+// setup() runs for every new picker instance (each trigger), so a
+// message about a stream's metadata is logged only the first time.
+bool FirstTimeFor(const std::string &key) {
+	static std::mutex mutex;
+	static std::set<std::string> seen;
+	std::lock_guard<std::mutex> lock(mutex);
+	return seen.insert(key).second;
+}
+
 }
 
 
@@ -51,7 +62,7 @@ template <int NComponents>
 DLPicker<NComponents>::DLPicker()
 : _minConfidence(0.4), _lastConfidence(0.0), _strategy(Strategy::Fast),
   _polarityMinConfidence(0.5), _lastPolarityConfidence(0.0),
-  _lastPolaritySet(false), _nextAttempt(0),
+  _polaritySense(PolaritySense::Direct), _lastPolaritySet(false), _nextAttempt(0),
   _bestConfidence(-1.0), _bestPolarityConfidence(0.0),
   _bestLowerUncertainty(-1.0), _bestUpperUncertainty(-1.0),
   _bestRawConfidence(-1.0) {
@@ -118,6 +129,31 @@ bool DLPicker<NComponents>::setup(const Settings &settings) {
 	// polarityLabels; see dl.h and ReadPolarity().
 	try { _polarityMinConfidence = settings.getDouble("picker." + methodID() + ".polarityMinConfidence"); }
 	catch ( ... ) { _polarityMinConfidence = 0.5; }
+
+	// The vertical's orientation, as it affects polarity; see dl.h.
+	double polarityMaxTilt = 20.0;
+	try { polarityMaxTilt = settings.getDouble("picker." + methodID() + ".polarityMaxTilt"); }
+	catch ( ... ) {}
+	const Stream &vertical = _streamConfig[VerticalComponent];
+	_polaritySense = VerticalPolaritySense(vertical.dip, vertical.gain, polarityMaxTilt);
+	if ( !session->config().polarityLabels.empty() &&
+	     _polaritySense != PolaritySense::Direct ) {
+		string streamID = settings.networkCode + "." + settings.stationCode + "." +
+		                  settings.locationCode + "." + vertical.code();
+		if ( FirstTimeFor(methodID() + " " + streamID) ) {
+			if ( _polaritySense == PolaritySense::Inverted ) {
+				SEISCOMP_INFO("[%s] %s: dip %.1f, gain %g -- polarity up/down "
+				              "swapped to refer to ground motion",
+				              methodID().c_str(), streamID.c_str(), vertical.dip, vertical.gain);
+			}
+			else {
+				SEISCOMP_WARNING("[%s] %s: dip %.1f is more than polarityMaxTilt = "
+				                  "%.1f degrees off vertical -- polarity left unset",
+				                  methodID().c_str(), streamID.c_str(), vertical.dip,
+				                  polarityMaxTilt);
+			}
+		}
+	}
 
 	// Confidence-derived uncertainty fallback; only used if the model
 	// has no uncertaintyLabels of its own -- see dl.h and
@@ -431,8 +467,9 @@ void DLPicker<NComponents>::process(const Record *record, const DoubleArray &) {
 		OPT(int) polarityRow = ReadPolarity(probs, cfg.polarityLabels, pickIdx,
 		                                     _polarityMinConfidence, polarityConfidence);
 		OPT(Polarity) polarity;
-		if ( polarityRow ) {
-			polarity = *polarityRow == 0 ? POSITIVE : NEGATIVE;
+		if ( polarityRow && _polaritySense != PolaritySense::Unusable ) {
+			bool up = (*polarityRow == 0) != (_polaritySense == PolaritySense::Inverted);
+			polarity = up ? POSITIVE : NEGATIVE;
 		}
 		double lowerUncertainty = -1.0, upperUncertainty = -1.0;
 		bool hasNativeUncertainty = ReadUncertainty(probs, cfg.uncertaintyLabels, pickIdx,

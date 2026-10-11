@@ -500,6 +500,21 @@ OPT(int) ReadPolarity(const std::map<std::string, std::vector<float>> &probs,
 
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+PolaritySense VerticalPolaritySense(double dip, double gain, double maxTilt) {
+	bool down = false;
+	if ( std::fabs(dip) <= 90.0 ) {
+		// Angle between the sensor axis and the true vertical.
+		if ( 90.0 - std::fabs(dip) > maxTilt ) {
+			return PolaritySense::Unusable;
+		}
+		down = dip > 0.0;
+	}
+	return down != (gain < 0.0) ? PolaritySense::Inverted : PolaritySense::Direct;
+}
+// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 bool ReadUncertainty(const std::map<std::string, std::vector<float>> &probs,
                       const std::vector<std::string> &uncertaintyLabels, int idx,
                       double &lower, double &upper) {

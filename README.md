@@ -174,6 +174,15 @@ and the pick's polarity is set only if that value also clears
 since `SecondaryPicker::Result` has no polarity field. Without
 `polarityLabels`, polarity is always left unset.
 
+The model sees raw counts, so its polarity refers to the vertical channel's
+counts; the plugin relates it to the ground motion from the channel's
+inventory dip and gain sign. For a sensor pointing down (dip near +90) or with
+a negative gain, up and down are swapped; both together cancel out. For a
+channel more than `polarityMaxTilt` degrees (default 20) off vertical, the
+first motion also depends on the horizontal motion, so polarity is left unset
+(a warning is logged once per stream). An unknown dip or gain counts as the
+standard up-pointing sensor with positive gain. Picks are not affected.
+
 **Uncertainty** — either a P or an S model may declare
 `seiscomp.picker.uncertaintyLabels` as one or two names from `phases`, e.g.
 `P_lower,P_upper` (or a single `P_sigma` for a symmetric value): row(s) giving
